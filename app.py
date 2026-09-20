@@ -1,40 +1,29 @@
 import streamlit as st
 import google.generativeai as genai
 
-# Configuração da página
+# Configuração da página do Streamlit
 st.set_page_config(
-    page_title="IA Séria e Rigorosa",
-    page_icon="🛡️",
+    page_title="Assistente de IA - Rigoroso e Obediente",
+    page_icon="🤖",
     layout="centered"
 )
 
-# Estilo CSS para forçar a cor preta em todo o texto e interface
-st.markdown("""
-    <style>
-    body, .stMarkdown, p, span, div, label, h1, h2, h3 {
-        color: #000000 !important;
-    }
-    .stChatInput input {
-        color: #000000 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Título da aplicação
+st.markdown("<h2 style='color: #000000;'>🤖 Assistente de IA - Rigoroso e Obediente</h2>", unsafe_allow_html=True)
+st.markdown("<p style='color: #333333;'>Interface de chat contínuo configurada para máxima precisão, sem alucinações e com texto em preto.</p>", unsafe_allow_html=True)
 
-st.title("🛡️ Assistente de IA - Rigoroso e Obediente")
-st.write("Interface de chat contínuo configurada para máxima precisão, sem alucinações e com texto em preto.")
-
-# Configuração segura da chave da API usando os Segredos do Streamlit
+# Configuração da Chave da API do Google Gemini
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
 except Exception:
-    st.error("⚠️ Erro crítico: A chave 'GEMINI_API_KEY' não foi configurada nos Segredos do Streamlit.")
+    st.error("⚠️ Erro crítico: A chave 'GEMINI_API_KEY' não foi configurada nos Secrets do Streamlit.")
     st.stop()
 
 # Configuração do modelo com instruções estritas anti-alucinação
 system_instruction = (
     "Você é um assistente de IA extremamente sério, literal e obediente. "
-    "Você deve seguir à risca todas as instruções dadas pelo usuário, sem mudar nada por conta própria. "
+    "Você deve seguir à risca todas as instruções dadas pelo usuário, sem mudar nada. "
     "É estritamente proibido inventar dados, fantasiar fatos ou cometer alucinações. "
     "Se não tiver certeza absoluta de uma informação ou se a resposta não puder ser verificada, "
     "você deve declarar claramente que não sabe, em vez de inventar."
@@ -45,10 +34,11 @@ generation_config = {
 }
 
 model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
+    model_name='gemini-pro',
     system_instruction=system_instruction,
     generation_config=generation_config,
 )
+
 # Inicializa o histórico de mensagens do chat na sessão do Streamlit
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = model.start_chat(history=[])
