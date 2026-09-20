@@ -8,21 +8,20 @@ st.set_page_config(
     layout="centered"
 )
 
-# Estilo CSS para forçar a cor preta em todo o texto da resposta e da interface
+# Estilo CSS para forçar a cor preta em todo o texto e interface
 st.markdown("""
     <style>
-    /* Força todas as letras da aplicação e das caixas de texto a serem pretas */
     body, .stMarkdown, p, span, div, label, h1, h2, h3 {
         color: #000000 !important;
     }
-    .stTextArea textarea {
+    .stChatInput input {
         color: #000000 !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🛡️ Assistente de IA - Rigoroso e Obediente")
-st.write("Sistema configurado para seguir ordens estritamente, sem inventar informações e com texto em preto.")
+st.write("Interface de chat contínuo configurada para máxima precisão, sem alucinações e com texto em preto.")
 
 # Configuração segura da chave da API usando os Segredos do Streamlit
 try:
@@ -32,7 +31,7 @@ except Exception:
     st.error("⚠️ Erro crítico: A chave 'GEMINI_API_KEY' não foi configurada nos Segredos do Streamlit.")
     st.stop()
 
-# Configuração do modelo com instruções estritas anti-alucinação e de obediência total
+# Configuração do modelo com instruções estritas anti-alucinação
 system_instruction = (
     "Você é um assistente de IA extremamente sério, literal e obediente. "
     "Você deve seguir à risca todas as instruções dadas pelo usuário, sem mudar nada por conta própria. "
@@ -41,7 +40,6 @@ system_instruction = (
     "você deve declarar claramente que não sabe, em vez de inventar."
 )
 
-# Inicializando o modelo com temperatura baixa para máxima precisão
 generation_config = {
     "temperature": 0.1,
 }
@@ -52,20 +50,27 @@ model = genai.GenerativeModel(
     generation_config=generation_config
 )
 
-# Caixa de entrada para a ordem ou pergunta do usuário
-pergunta_usuario = st.text_area("Insira sua instrução ou pergunta com rigor:")
+# Inicializa o histórico de mensagens do chat na sessão do Streamlit
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = model.start_chat(history=[])
 
-if st.button("Executar com Rigor"):
-    if pergunta_usuario:
-        with st.spinner("Processando com máxima precisão..."):
+# Exibe as mensagens anteriores do chat na tela
+for message in st.session_state.chat_history.history:
+    role = "user" if message.role == "user" else "assistant"
+    with st.chat_message(role):
+        st.markdown(f"<div style='color: #000000;'>{message.parts[0].text}</div>", unsafe_allow_html=True)
+
+# Caixa de entrada do chat na parte inferior
+if prompt_usuario := st.chat_input("Digite sua instrução ou pergunta aqui..."):
+    # Mostra a mensagem do usuário imediatamente na interface
+    with st.chat_message("user"):
+        st.markdown(f"<div style='color: #000000;'>{prompt_usuario}</div>", unsafe_allow_html=True)
+    
+    # Envia para a IA e obtém a resposta mantendo o contexto
+    with st.chat_message("assistant"):
+        with st.spinner("Processando com rigor..."):
             try:
-                response = model.generate_content(pergunta_usuario)
-                
-                st.subheader("Resposta Oficial:")
-                # Exibe a resposta garantindo o formato em texto preto
+                response = st.session_state.chat_history.send_message(prompt_usuario)
                 st.markdown(f"<div style='color: #000000;'>{response.text}</div>", unsafe_allow_html=True)
-                
             except Exception as e:
                 st.error(f"Erro na execução: {e}")
-    else:
-        st.warning("Por favor, insira uma instrução antes de executar.")
